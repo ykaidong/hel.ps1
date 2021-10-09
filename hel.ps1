@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # @file     hel.ps1
 # @author   大杨 <ykaidong@devlabs.cn>
-# @version  0.2
+# @version  0.21
 # @date     2021-10-09
 # @bref     此脚本运行于Windows平台上的PowerShell,  在运行脚本前需要在PowerShell中
 #           执行 "Set-ExecutionPolicy RemoteSigned" 以更改脚本执行策略
@@ -11,18 +11,22 @@
 #           并且保持原来的文件夹结构
 # ----------------------------------------------------------------------------
 # Change Logs:
-# Date          Author          Notes
-# 2021-09-12    ykaidong        初始版本
-# 2021-10-09    ykaidong        将转换小分辨率率与转换代理的功能合并
+# Date          Version     Author          Notes
+# 2021-09-12    0.1         ykaidong        初始版本
+# 2021-10-09    0.2         ykaidong        将转换小分辨率率与转换代理的功能合并
+# 2021-10-09    0.21        ykaidong        为不同分辨率视频增加顶级文件夹
 # ----------------------------------------------------------------------------
 # @attention
 #
 # ----------------------------------------------------------------------------
 
-# [0]对应proxy, [1]对应resize
+# 以下数组中, [0]对应proxy, [1]对应resize
 $destdir = "proxy", "resize"     
-$resolutions = "1280x720", "1920x1080"
 $codecs = "prores_ks -profile:v standard -pix_fmt yuv422p10le", "libx264" 
+$resolutions = @(
+    @{"name" = "HD";      "content" = "1280x720"},
+    @{"name" = "FHD";     "content" = "1920x1080"}
+)
 
 $suffixs = "*.mov", "*.mp4", "*.mxf", "*.avi"
 
@@ -31,18 +35,7 @@ $exclude = $destdir + ("04_视觉效果", "07_导出")
 
 # ----------------------------------------------------------------------------
 
-$name1 = @"
- _          _           
-| |        | |          
-| |__   ___| |_ __  ___ 
-| '_ \ / _ \ | '_ \/ __|
-| | | |  __/ | |_) \__ \
-|_| |_|\___|_| .__/|___/
-             | |        
-             |_|        
-"@
-
-$name2 = @"
+$name = @"
       ___           ___           ___       ___           ___     
      /\__\         /\  \         /\__\     /\  \         /\  \    
     /:/  /        /::\  \       /:/  /    /::\  \       /::\  \   
@@ -60,7 +53,7 @@ $name2 = @"
 $title = @"
 
 File name: hel.ps1
-  Version: V0.2
+  Version: V0.21
      Date: 2021-10-09
  Descript: 此脚本用于将当前目录中符合条件的视频文件转码为代理文件(Apple PreRes)
            或小分辨率格式(H.264), 存放代理文件的目标目录为./$($destdir[0]), 存放小分辨率
@@ -73,7 +66,7 @@ File name: hel.ps1
 "@
 
 
-Write-Host $name2
+Write-Host $name
 Write-Host $title
 
 # 功能选择
@@ -89,7 +82,7 @@ $n = $resolutions.Length
 # 分辨率选择
 Write-Host ""
 for ($i = 0; $i -le $n-1; $i++) {
-    Write-Host (-join(($i + 1), ". ", $resolutions[$i]))
+    Write-Host (-join(($i + 1), ". ", $resolutions[$i].content))
 }
 
 Write-Host ""
@@ -106,20 +99,25 @@ $location = (Get-Location).Path
 # 获取 $item 在 目标目录中对应的路径
 function getproxy($item) 
 {
-    return ($item.FullName.Replace($location, (-join($location, "\", $destdir[$inputfun]))))
+    Write-Host ($item.FullName.Replace($location, (-join(
+                    $location, "\$($destdir[$inputfun])", "\$($resolutions[$inputres].name)"))))
+    return ($item.FullName.Replace($location, (-join(
+                    $location, "\$($destdir[$inputfun])", "\$($resolutions[$inputres].name)"))))
 }
 
 
 function encode($file) 
 {
     if ($suffixs -contains $file.Extension.ToLower().Replace(".", "*.")) {  # 如果后缀名符合条件
-        $dest = getproxy($file)                                             # 获取代理文件夹中对应的位置
-        $dest = $dest -replace "\.+.*$", ".mov"                             # 替换后缀(用mov封装prores)
+        $dest = getproxy($file)                                             # 获取目标文件夹中对应的位置
+        $dest = $dest -replace "\.[^\.]+$", ".mov"                          # 替换文件后缀(用mov封装prores)
         if (-not (Test-Path $dest)) {                                       # 如果文件不存在于目标位置
             $src = (-join('"', $file.FullName, '"'))                        # 则使用FFMpeg进行转换
             $dest = (-join('"', $dest, '"'))
-            Invoke-Expression (("ffmpeg", "-i", $src, "-c:v", $codecs[$inputfun], "-s", $resolutions[$inputres], $dest) -join " ")
-            # Write-Host (("ffmpeg", "-i", $src, "-c:v", $codecs[$inputfun], "-s", $resolutions[$inputres], $dest) -join " ")
+            Invoke-Expression (("ffmpeg", "-i", $src, 
+                                          "-c:v", $codecs[$inputfun], 
+                                          "-s", $resolutions[$inputres].content, 
+                                          $dest) -join " ")
         }
     }
 
