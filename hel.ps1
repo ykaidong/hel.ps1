@@ -100,7 +100,7 @@ $location = (Get-Location).Path
 
 # 目标根目录
 $destroot = (-join(
-        "\$($destdir[$inputfun])", 
+        "$($destdir[$inputfun])", 
         "_", 
         "$($resolutions[$inputres].name)"
 ))
