@@ -31,6 +31,9 @@ $suffixs = "*.mov", "*.mp4", "*.mxf", "*.avi"
 # 需要忽略的文件夹, 所有目标文件夹会被自动忽略掉
 $exclude = "04_视觉效果", "07_导出"
 
+#目标文件封装
+$muxer = ".mov"
+
 # ----------------------------------------------------------------------------
 
 $name = @"
@@ -125,7 +128,7 @@ function encode($file)
 {
     if ($suffixs -contains $file.Extension.ToLower().Replace(".", "*.")) {  # 如果后缀名符合条件
         $dest = getproxy($file)                                             # 获取目标文件夹中对应的位置
-        $dest = $dest -replace "\.[^\.]+$", ".mov"                          # 替换文件后缀(用mov封装prores)
+        $dest = $dest -replace "\.[^\.]+$", $muxer                          # 替换文件后缀(用mov封装prores)
         if (-not (Test-Path $dest)) {                                       # 如果文件不存在于目标位置
             $src = (-join('"', $file.FullName, '"'))                        # 则使用FFMpeg进行转换
             $dest = (-join('"', $dest, '"'))
