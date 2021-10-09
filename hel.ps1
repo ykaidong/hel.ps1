@@ -117,7 +117,7 @@ $exclude += $excludedest
 # 获取 $item 在 目标目录中对应的路径
 function getproxy($item) 
 {
-    return ($item.FullName.Replace($location, (-join($location, $destroot))))
+    return ($item.FullName.Replace($location, (-join($location, "\", $destroot))))
 }
 
 
