@@ -24,6 +24,7 @@ $codecs = "prores_ks -profile:v standard -pix_fmt yuv422p10le", "libx264"
 $resolutions = @(
     @{"name" = "HD";      "content" = "1280x720"},
     @{"name" = "FHD";     "content" = "1920x1080"}
+    @{"name" = "VFHD";    "content" = "1080x1920"}
 )
 
 $suffixs = "*.mov", "*.mp4", "*.mxf", "*.avi"
